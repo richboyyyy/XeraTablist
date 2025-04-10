@@ -5,16 +5,10 @@ delay: 20 # Delay for each tab update in ticks. 1 second = 20 ticks (changing re
 tablist:
   header:
     - ""
-    - "&4Xera&3Tablist"
-    - ""
-    - "&6This the default Tablist for XeraTablist"
+    - "&l&o&7FR"
+    - "&l&o&7OG"
     - ""
   footer:
     - ""
-    - "&3%tps% tps — %players% players — %ping% ping — %uptime% uptime"
-    - ""
-    - "&7contact: Leee#1858"
-    - "&7discussion: https://discord.gg/KgrrEQr"
-    - "&7website: xera.ca"
-    - "&7these are the only official xera websites and contacts."
+    - "%tps%&3 tps — %players% players — %ping% ping — %uptime% uptime"
     - ""
