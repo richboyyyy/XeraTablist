@@ -5,7 +5,7 @@ import org.bukkit.ChatColor;
 
 public class TabUtil {
     private static String format(double tps) {
-        return (tps > 18.0D ? ChatColor.GREEN : (tps > 16.0D ? ChatColor.YELLOW : ChatColor.RED)) + String.format("%.2f", Math.min((double) Math.round(tps * 100.0D) / 100.0D, 20.0D));
+        return (tps > 18.0D ? ChatColor.DARK_GRAY : (tps > 16.0D ? ChatColor.YELLOW : ChatColor.RED)) + String.format("%.2f", Math.min((double) Math.round(tps * 100.0D) / 100.0D, 20.0D));
     }
 
     public static String getTps() {
