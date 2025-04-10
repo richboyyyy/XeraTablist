@@ -8,18 +8,29 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.Listener;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import java.lang.reflect.InvocationTargetException;
 import java.util.List;
 import java.util.logging.Logger;
 
 public class XeraTablist extends JavaPlugin implements Listener {
     public static long startTime;
     public static boolean hasPapi = false;
+    private static XeraTablist instance;
+
     @Getter
     public String header;
     @Getter
     public String footer;
 
+    @Override
+    public void onLoad() {
+        instance = this;
+    }
+
+    public static XeraTablist getInstance() {
+        return instance;
+    }
+
+    @Override
     public void onEnable() {
         Logger log = getLogger();
 
@@ -29,20 +40,25 @@ public class XeraTablist extends JavaPlugin implements Listener {
 
         startTime = System.currentTimeMillis();
         this.getCommand("tabrconfig").setExecutor(new ReloadCommand(this));
-        Bukkit.getScheduler().runTaskTimer(this, new Tablist(this), 0, getConfig().getInt("delay"));
 
         if (Bukkit.getPluginManager().getPlugin("PlaceholderAPI") != null) {
             hasPapi = true;
         }
 
-        Bukkit.getScheduler().scheduleSyncRepeatingTask(this, new Tablist(this), 0, 20);
+        // Folia-compatible scheduler
+        Bukkit.getGlobalRegionScheduler().runAtFixedRate(this, task -> {
+            for (Player player : Bukkit.getOnlinePlayers()) {
+                Bukkit.getRegionScheduler().run(this, player.getLocation(), scheduledTask -> {
+                    Tablist.sendTablist(player);
+                });
+            }
+        }, 0L, getConfig().getInt("delay"));
 
         log.info("XeraTablist enabled");
     }
 
-    public static String parseText(Player player, String text) throws NoSuchFieldException, NoSuchMethodException, IllegalAccessException, InvocationTargetException {
-        Object entityPlayer = player.getClass().getMethod("getHandle").invoke(player);
-        int ping = (Integer) entityPlayer.getClass().getField("ping").get(entityPlayer);
+    public static String parseText(Player player, String text) {
+        int ping = player.getPing();
 
         // PAPI
         if (hasPapi) {
@@ -54,10 +70,10 @@ public class XeraTablist extends JavaPlugin implements Listener {
 
         // Custom Placeholders
         text = text
-                .replaceAll("%tps%", TabUtil.getTps())
-                .replaceAll("%ping%", String.valueOf(ping))
-                .replaceAll("%uptime%", TabUtil.getFormattedInterval(System.currentTimeMillis() - XeraTablist.startTime))
-                .replaceAll("%players%", Integer.toString(Bukkit.getServer().getOnlinePlayers().size()));
+                .replace("%tps%", TabUtil.getTps())
+                .replace("%ping%", String.valueOf(ping))
+                .replace("%uptime%", TabUtil.getFormattedInterval(System.currentTimeMillis() - XeraTablist.startTime))
+                .replace("%players%", String.valueOf(Bukkit.getOnlinePlayers().size()));
 
         return text;
     }
@@ -75,19 +91,13 @@ public class XeraTablist extends JavaPlugin implements Listener {
         List<String> footerList = getConfig().getStringList("tablist.footer");
 
         for (int i = 0; i < headerList.size(); i++) {
-            if (i == (headerList.size() - 1)) {
-                header.append(headerList.get(i));
-            } else {
-                header.append(headerList.get(i)).append("\n");
-            }
+            header.append(headerList.get(i));
+            if (i != (headerList.size() - 1)) header.append("\n");
         }
 
         for (int i = 0; i < footerList.size(); i++) {
-            if (i == (footerList.size() - 1)) {
-                footer.append(footerList.get(i));
-            } else {
-                footer.append(footerList.get(i)).append("\n");
-            }
+            footer.append(footerList.get(i));
+            if (i != (footerList.size() - 1)) footer.append("\n");
         }
 
         this.header = header.toString();
